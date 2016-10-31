@@ -31,17 +31,19 @@
       }
 
       var store = Redux.createStore(counter)
+      //createStore要传入一个reducers函数，同时返回一个store对象
       var valueEl = document.getElementById('value')
-
+      //返回的store对象有一个getState方法
       function render() {
         valueEl.innerHTML = store.getState().toString()
       }
-
+      //手动调用render，同时把render作为store.subscribe函数的参数传入
       render()
       store.subscribe(render)
 
       document.getElementById('increment')
         .addEventListener('click', function () {
+          //点击事件触发的时候直接调用store的dispatch方法
           store.dispatch({ type: 'INCREMENT' })
         })
 
