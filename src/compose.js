@@ -8,17 +8,18 @@
  * from right to left. For example, compose(f, g, h) is identical to doing
  * (...args) => f(g(h(...args))).
  */
-
+ // dispatch = compose(...chain)(store.dispatch)
 export default function compose(...funcs) {
   if (funcs.length === 0) {
     return arg => arg
   }
-
+ //如果中间件的个数为1，那么获取第一个中间件
   if (funcs.length === 1) {
     return funcs[0]
   }
-
   const last = funcs[funcs.length - 1]
   const rest = funcs.slice(0, -1)
+  //last表示最后一个中间件，而rest标签除了最后一个中间件的其他中间件
   return (...args) => rest.reduceRight((composed, f) => f(composed), last(...args))
+  //初始值为h(...args),reduceRight第一个函数的第一个参数为previousValue
 }

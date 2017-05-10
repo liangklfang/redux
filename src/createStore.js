@@ -21,43 +21,49 @@ export var ActionTypes = {
  *
  * @param {Function} reducer A function that returns the next state tree, given
  * the current state tree and the action to handle.
+ * reducer会接收两个参数:当前的state对象和action对象=>下一个state对象
  *
  * @param {any} [preloadedState] The initial state. You may optionally specify it
  * to hydrate the state from the server in universal apps, or to restore a
  * previously serialized user session.
  * If you use `combineReducers` to produce the root reducer function, this must be
  * an object with the same shape as `combineReducers` keys.
+ * 如果你使用了combineReducers来组合得到一个最终的reducer，那么它必须是一个对象，同时
+ * 和combineReducers有相同的key
  *
  * @param {Function} [enhancer] The store enhancer. You may optionally specify it
  * to enhance the store with third-party capabilities such as middleware,
  * time travel, persistence, etc. The only store enhancer that ships with Redux
  * is `applyMiddleware()`.
- *
+ *如果你需要使用第三方的插件来提升store的能力，例如middleware,time travel,
+ *或者持久化，那么你可以使用applyMiddleware
+ * 
  * @returns {Store} A Redux store that lets you read the state, dispatch actions
  * and subscribe to changes.
  */
+//const store = createStore(counter)
 export default function createStore(reducer, preloadedState, enhancer) {
+  //如果传入两个参数，同时第二个参数是函数，那么第二个参数是enhancer
   if (typeof preloadedState === 'function' && typeof enhancer === 'undefined') {
     enhancer = preloadedState
     preloadedState = undefined
   }
-
+  //enhancer必须是一个函数
   if (typeof enhancer !== 'undefined') {
     if (typeof enhancer !== 'function') {
       throw new Error('Expected the enhancer to be a function.')
     }
-
     return enhancer(createStore)(reducer, preloadedState)
   }
-
+  //reducer必须是函数
   if (typeof reducer !== 'function') {
     throw new Error('Expected the reducer to be a function.')
   }
-
   var currentReducer = reducer
   var currentState = preloadedState
   var currentListeners = []
   var nextListeners = currentListeners
+  //nextListeners指向了currentListeners的引用~
   var isDispatching = false
 
   function ensureCanMutateNextListeners() {
@@ -102,19 +108,17 @@ export default function createStore(reducer, preloadedState, enhancer) {
     if (typeof listener !== 'function') {
       throw new Error('Expected listener to be a function.')
     }
-
     var isSubscribed = true
-
+    //将isSubscribed设置为true，同时将listener添加到nextListeners集合中
     ensureCanMutateNextListeners()
     nextListeners.push(listener)
-
+    //subscribe返回的是一个函数，调用它就会从nextListeners中将这个回调
+    //删除
     return function unsubscribe() {
       if (!isSubscribed) {
         return
       }
-
       isSubscribed = false
-
       ensureCanMutateNextListeners()
       var index = nextListeners.indexOf(listener)
       nextListeners.splice(index, 1)
@@ -153,31 +157,31 @@ export default function createStore(reducer, preloadedState, enhancer) {
         'Use custom middleware for async actions.'
       )
     }
-
+    //传入dispatch的必须是一个plainObject，同时type必须存在
     if (typeof action.type === 'undefined') {
       throw new Error(
         'Actions may not have an undefined "type" property. ' +
         'Have you misspelled a constant?'
       )
     }
-
+    //如果已经在修改了store，那么不允许立刻再次修改reducer
     if (isDispatching) {
       throw new Error('Reducers may not dispatch actions.')
     }
-
     try {
       isDispatching = true
       currentState = currentReducer(currentState, action)
+      //执行我们传入的reducer函数，同时传入当前的state与action计算得到下一次的state
     } finally {
       isDispatching = false
     }
-
+    //通过执行currentReducer得到新的state，并作为currentState
     var listeners = currentListeners = nextListeners
+    //更新nextListeners，同时将我们通过subscribe注册的函数都执行一遍
     for (var i = 0; i < listeners.length; i++) {
       var listener = listeners[i]
       listener()
     }
-
     return action
   }
 
@@ -187,7 +191,8 @@ export default function createStore(reducer, preloadedState, enhancer) {
    * You might need this if your app implements code splitting and you want to
    * load some of the reducers dynamically. You might also need this if you
    * implement a hot reloading mechanism for Redux.
-   *
+   * 用一个新的store替换掉我们当前的store用来计算我们的新的state。如果你的app支持code splitting
+   * 而且你想要动态加载reducer。同时如果你要为你的Redux支持Hot Reloading也需要
    * @param {Function} nextReducer The reducer for the store to use instead.
    * @returns {void}
    */
@@ -195,7 +200,6 @@ export default function createStore(reducer, preloadedState, enhancer) {
     if (typeof nextReducer !== 'function') {
       throw new Error('Expected the nextReducer to be a function.')
     }
-
     currentReducer = nextReducer
     dispatch({ type: ActionTypes.INIT })
   }
@@ -221,13 +225,13 @@ export default function createStore(reducer, preloadedState, enhancer) {
         if (typeof observer !== 'object') {
           throw new TypeError('Expected the observer to be an object.')
         }
-
+       //如果subscribe中传入的observer有next方法，那么我们传入它我们的getState的值
+      //同时也将observeState方法传入到外部的subscribe方法中
         function observeState() {
           if (observer.next) {
             observer.next(getState())
           }
         }
-
         observeState()
         var unsubscribe = outerSubscribe(observeState)
         return { unsubscribe }
@@ -242,6 +246,8 @@ export default function createStore(reducer, preloadedState, enhancer) {
   // When a store is created, an "INIT" action is dispatched so that every
   // reducer returns their initial state. This effectively populates
   // the initial state tree.
+  // 当我们初次创建store的时候，我们会发出一个"INIT"事件，此时所有的reducer会返回
+  // 他们的初始状态。此时获取到的就是初始的state树!~~
   dispatch({ type: ActionTypes.INIT })
 
   return {

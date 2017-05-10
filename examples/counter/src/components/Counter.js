@@ -19,6 +19,7 @@ class Counter extends Component {
 
   render() {
     const { value, onIncrement, onDecrement } = this.props
+    //得到属性
     return (
       <p>
         Clicked: {value} times

@@ -1,3 +1,4 @@
+//第一个参数是state，而第二个参数是action
 export default (state = 0, action) => {
   switch (action.type) {
     case 'INCREMENT':

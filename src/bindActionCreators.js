@@ -1,3 +1,5 @@
+// bindActionCreator(actionCreator, dispatch)
+// actionCreator就是我们的一个导出函数
 function bindActionCreator(actionCreator, dispatch) {
   return (...args) => dispatch(actionCreator(...args))
 }
@@ -22,6 +24,21 @@ function bindActionCreator(actionCreator, dispatch) {
  * every action creator wrapped into the `dispatch` call. If you passed a
  * function as `actionCreators`, the return value will also be a single
  * function.
+ * 下面是TodoActionCreators.js
+ export function addTodo(text) {
+  return {
+    type: 'ADD_TODO',
+    text
+  }
+}
+
+export function removeTodo(id) {
+  return {
+    type: 'REMOVE_TODO',
+    id
+  }
+}
+ let boundActionCreators = bindActionCreators(TodoActionCreators, dispatch)
  */
 export default function bindActionCreators(actionCreators, dispatch) {
   if (typeof actionCreators === 'function') {
@@ -34,15 +51,21 @@ export default function bindActionCreators(actionCreators, dispatch) {
       `Did you write "import ActionCreators from" instead of "import * as ActionCreators from"?`
     )
   }
-
   var keys = Object.keys(actionCreators)
+  //获取keys
   var boundActionCreators = {}
   for (var i = 0; i < keys.length; i++) {
     var key = keys[i]
     var actionCreator = actionCreators[key]
+    //得到我们的actionCreator方法
     if (typeof actionCreator === 'function') {
       boundActionCreators[key] = bindActionCreator(actionCreator, dispatch)
     }
+    //boundActionCreators["removeTodo"]=function(){}
+    //boundActionCreators["addTodo"]=function(){}
+    //所以，返回的内容很简单，就是把我们自己的函数包装一下，返回一个新的函数
+    //当你调用这个新的函数的时候，新函数会直接dispatch我们的旧函数调用的值
+    //同时将新函数的参数也传递给旧函数
   }
   return boundActionCreators
 }
